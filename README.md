@@ -41,9 +41,7 @@ app.post("/addTodo", addTodo);
 axios
   .post("http://localhost:3000/addTodo", currentTask)
   .then(({ data }) => {
-    if (!!data) {
-      console.log("task added");
-    }
+    if (!!data) console.log("task added");
     setCurrentTask("");
   })
   .then(() => {
@@ -82,13 +80,10 @@ axios
 ```ts
 app.delete("/deleteTodo", deleteTodo);
 //
-axios
-  .delete("http://localhost:3000/deleteTodo", todo)
-  .then(({ data }) => {})
-  .then(() => {
-    // update tasks
-    axios.get("http://localhost:3000/getTodos").then(({ data }) => {
-      setTasks(data);
-    });
+axios.delete(`http://localhost:3000/deleteTodo:${id}`).then(() => {
+  // update tasks
+  axios.get("http://localhost:3000/getTodos").then(({ data }) => {
+    setTasks(data);
   });
+});
 ```
