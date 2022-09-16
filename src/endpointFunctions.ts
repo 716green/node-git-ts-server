@@ -1,8 +1,21 @@
 import { Request, Response } from "express";
-import { connection } from "./";
+import mysql from "mysql";
+import dotenv from "dotenv";
+dotenv.config();
 
+const { MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env;
+
+const connection = mysql.createConnection({
+  host: MYSQL_HOST,
+  user: MYSQL_USER,
+  password: MYSQL_PASSWORD,
+  database: MYSQL_DATABASE,
+  port: 3306,
+});
+
+connection.connect();
 const runMysqlQuery = async (query: string, res: Response): Promise<void> => {
-  connection.query(query, (error, results, _fields) => {
+  connection.query(query, async (error, results, _fields) => {
     if (error) {
       console.error(error);
       res.status(501).json(error);
@@ -38,6 +51,6 @@ export const deleteTodo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { id } = req.body;
+  const { id } = req.params;
   await runMysqlQuery(`DELETE FROM todos WHERE id = ${id};`, res);
 };
