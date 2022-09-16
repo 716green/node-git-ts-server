@@ -1,14 +1,25 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import dotenv from "dotenv";
-import mysql from "mysql";
 import cors from "cors";
+import mysql from "mysql";
+
+import { getTodos, addTodo, updateTodo, deleteTodo } from "./endpointFunctions";
 
 //* Load environment variables
 dotenv.config();
 
 //* Define Port
-const { PORT, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE } =
-  process.env;
+const { MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env;
+const PORT = process.env.PORT || 3000;
+
+export const connection = mysql.createConnection({
+  host: MYSQL_HOST,
+  user: MYSQL_USER,
+  password: MYSQL_PASSWORD,
+  database: MYSQL_DATABASE,
+  port: 3306,
+});
+connection.connect();
 
 //* Generate instance of express server
 const app = express();
@@ -21,55 +32,11 @@ app.use(express.json());
 
 app.use(cors());
 
-const connection = mysql.createConnection({
-  host: MYSQL_HOST,
-  user: MYSQL_USER,
-  password: MYSQL_PASSWORD,
-  database: MYSQL_DATABASE,
-  port: 3306,
-});
-
-const mysqlQuery = async (query: string): Promise<any[]> => {
-  connection.connect();
-  const res: any = connection.query(query, (error, results, _fields) => {
-    if (error) console.error(error);
-    console.log(results);
-    connection.end();
-  });
-
-  console.log(res);
-  return res;
-};
-
 //* Define routes
-app.get("/getTodos", async (_req: Request, res: Response): Promise<void> => {
-  const results: any = await mysqlQuery("SELECT * FROM todos");
-  console.log(results);
-
-  res.json({ results });
-});
-
-// TODO - in progress
-app.post("/addTodo", (req: Request, res: Response): void => {
-  const { todo } = req.body;
-  res.json({ message: ["Todo added", todo].join(" - ") });
-});
-
-// TODO - in progress
-app.put("/updateTodo", (req: Request, res: Response): void => {
-  const { id, newStatus } = req.body;
-  res.json({
-    message: ["Todo Status Updated", "- id:", id, "status:", newStatus].join(
-      " "
-    ),
-  });
-});
-
-// TODO - in progress
-app.post("/deleteTodo", (req: Request, res: Response): void => {
-  const { todo } = req.body;
-  res.json({ message: ["Todo added", todo].join(" - ") });
-});
+app.get("/getTodos", getTodos);
+app.post("/addTodo", addTodo);
+app.put("/updateTodo", updateTodo);
+app.delete("/deleteTodo", deleteTodo);
 
 //* Listen on port
 app.listen(PORT, () => console.log(`listening at http://localhost:${PORT}`));
