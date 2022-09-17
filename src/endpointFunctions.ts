@@ -1,56 +1,62 @@
 import { Request, Response } from "express";
-import mysql from "mysql";
-import dotenv from "dotenv";
-dotenv.config();
-
-const { MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE } = process.env;
-
-const connection = mysql.createConnection({
-  host: MYSQL_HOST,
-  user: MYSQL_USER,
-  password: MYSQL_PASSWORD,
-  database: MYSQL_DATABASE,
-  port: 3306,
-});
-
-connection.connect();
-const runMysqlQuery = async (query: string, res: Response): Promise<void> => {
-  connection.query(query, async (error, results, _fields) => {
-    if (error) {
-      console.error(error);
-      res.status(501).json(error);
-    }
-    res.json(results);
-  });
-};
+import { Connection } from "typeorm";
+import { connect } from "./typeorm/config";
+import { Todo } from "./typeorm/entity/todos";
+import { getAllTodos } from "./typeorm/helperFunctions";
 
 export const getTodos = async (_req: Request, res: Response): Promise<void> => {
-  await runMysqlQuery("SELECT * FROM todos;", res);
+  console.log("getTodos");
+  const connection = await connect();
+  const todos = await getAllTodos(connection);
+  res.json(todos);
 };
 
 export const addTodo = async (req: Request, res: Response): Promise<void> => {
+  console.log("addTodo");
   const { task } = req.body;
-  await runMysqlQuery(
-    `INSERT INTO todos (task, status) VALUES ('${task}', 'pending');`,
-    res
-  );
+  const connection = await connect();
+  const todoRepo = connection.getRepository(Todo);
+
+  const newTodo = new Todo();
+  newTodo.task = task;
+  newTodo.status = "pending";
+  await todoRepo.save(newTodo);
+
+  const todos = await getAllTodos(connection);
+  res.json(todos);
 };
 
 export const updateTodo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  console.log("updateTodo");
   const { id, task, status } = req.body;
-  await runMysqlQuery(
-    `UPDATE todos SET task = "${task}", status = "${status}" WHERE id = ${id};`,
-    res
-  );
+  const connection: Connection = await connect();
+  const todoRepo = connection.getRepository(Todo);
+
+  const todo = await todoRepo.findOne({ where: { id } });
+  if (!!todo) {
+    todo.task = task;
+    todo.status = status;
+    await todoRepo.save(todo);
+  }
+
+  const todos = await getAllTodos(connection);
+  res.json(todos);
 };
 
 export const deleteTodo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  console.log("deleteTodo");
   const { id } = req.params;
-  await runMysqlQuery(`DELETE FROM todos WHERE id = ${id};`, res);
+  const connection: Connection = await connect();
+
+  const todoRepo = connection.getRepository(Todo);
+  await todoRepo.delete(id);
+
+  const todos = await getAllTodos(connection);
+  res.json(todos);
 };

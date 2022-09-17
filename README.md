@@ -16,16 +16,18 @@ npx tsconfig.json
 interface ITodo {
   id: number;
   task: string;
-  status: "pending" | "completed";
+  status: TStatus;
 }
 
-type task = string;
+type TStatus = "pending" | "completed";
 ```
 
 ## GET TODOS - Params: none
 
 ```ts
+// server
 app.get("/getTodos", getTodos);
+// client
 axios.get("http://localhost:3000/getTodos").then(({ data }) => {
   setTasks(data);
 });
@@ -36,20 +38,13 @@ axios.get("http://localhost:3000/getTodos").then(({ data }) => {
 ## ADD TODO - Params: `currentTask: string`
 
 ```ts
+// server
 app.post("/addTodo", addTodo);
-//
-axios
-  .post("http://localhost:3000/addTodo", currentTask)
-  .then(({ data }) => {
-    if (!!data) console.log("task added");
-    setCurrentTask("");
-  })
-  .then(() => {
-    // update tasks
-    axios.get("http://localhost:3000/getTodos").then(({ data }) => {
-      setTasks(data);
-    });
-  });
+// client
+axios.post("http://localhost:3000/addTodo", currentTask).then(({ data }) => {
+  setTasks(data);
+  setCurrentTask("");
+});
 ```
 
 ---
@@ -57,20 +52,13 @@ axios
 ## UPDATE TASK NAME OR STATUS - Params: `todo: ITodo`
 
 ```ts
+// server
 app.put("/updateTodo", updateTodo);
-//
-axios
-  .put("http://localhost:3000/updateTodo", todo)
-  .then(({ data }) => {
-    console.log("task updated");
-    setCurrentTask("");
-  })
-  .then(() => {
-    // update tasks
-    axios.get("http://localhost:3000/getTodos").then(({ data }) => {
-      setTasks(data);
-    });
-  });
+// client
+axios.put("http://localhost:3000/updateTodo", todo).then(({ data }) => {
+  setCurrentTask("");
+  setTasks(data);
+});
 ```
 
 ---
@@ -78,12 +66,10 @@ axios
 ## DELETE TODO - Params: `todo: ITodo`
 
 ```ts
+// server
 app.delete("/deleteTodo", deleteTodo);
-//
-axios.delete(`http://localhost:3000/deleteTodo:${id}`).then(() => {
-  // update tasks
-  axios.get("http://localhost:3000/getTodos").then(({ data }) => {
-    setTasks(data);
-  });
+// client
+axios.delete(`http://localhost:3000/deleteTodo:${id}`).then(({ data }) => {
+  setTasks(data);
 });
 ```
